@@ -1,48 +1,65 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
 
 <dom-module id="movie-search-app">
   <template>
     <style>
       :host {
-        height: 100%;
-        width: 100%;
+        /* min-height: 500px; */
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
         display: grid;
         grid-template-columns: 75% auto;        
       }
 
       .left-movie-app {
         width: 100%;
-        background-color: red;
+        background-color: #CCCCCC;
         grid-column: span 1;
       }
 
       .right-movie-app {
         width: 100%;
-        background-color: green;
+        background-color: #BBBBBB;
         grid-column: span 1;
+      }
+
+      .movies-list { 
+        min-height: 100px;
+        border: solid 1px black;      
+      }
+
+      .movies-list > div {
+        border: solid 1px black;
       }
 
     </style>
     
 
       <div class="left-movie-app">
-        <input type="text" id="textSearch" placeholder="Nombre de película..." />
-        <br />
+        Search (by name): <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch" />
         
+        <div
+
+        <iron-list class="movies-list" items="[[movies]]">
+          <template>
+            <div>
+              Nombre de película: [[ item.Title ]]
+            </div>
+          </template>
+        </iron-list>        
       </div>
       <div class="right-movie-app">
-        BOTON Y FICHA
+        <input type="button" value="Buscar" disabled="{{ btnSearchDisabled }}" on-click="doOMDBSearch" />
       </div>
-
-
-
+      <iron-ajax id="myxhr" on-response="handleMovieSearch"></iron-ajax>
   </template>
 
   <script>
-    /**
-     * @customElement
-     * @polymer
-     */
     class MovieSearchApp extends Polymer.Element {
       static get is() { return 'movie-search-app'; }
       static get properties() {
@@ -50,9 +67,40 @@
           prop1: {
             type: String,
             value: 'movie-search-app'
+          },
+          movies: {
+            type: Array            
+          },
+          btnSearchDisabled: {
+            type: Boolean,
+            value: true
           }
         };
       }
+      handleChangeTextSearch(oInputEvent) {
+        let sTotalText = oInputEvent.srcElement.value;
+        if(sTotalText.length > 2) {
+          this.btnSearchDisabled = false;
+        } else {
+          this.btnSearchDisabled = true;
+        }
+      }
+
+      handleMovieSearch(oEvent, oRequest) {
+        let aResult = oRequest.parseResponse();
+        this.movies = aResult.Search;
+      }
+
+      doOMDBSearch() {
+        let sText = this.$.textSearch.value;
+        console.log(sText);
+        let sURL = "http://www.omdbapi.com/?apikey=e477ed6a&s=" + sText;
+        console.log(sURL);
+        this.$.myxhr.url = sURL;
+        this.$.myxhr.generateRequest();
+      }
+
+
     }
 
     window.customElements.define(MovieSearchApp.is, MovieSearchApp);
