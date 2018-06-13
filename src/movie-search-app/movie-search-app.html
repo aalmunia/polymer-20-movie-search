@@ -1,0 +1,60 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="movie-search-app">
+  <template>
+    <style>
+      :host {
+        height: 100%;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 75% auto;        
+      }
+
+      .left-movie-app {
+        width: 100%;
+        background-color: red;
+        grid-column: span 1;
+      }
+
+      .right-movie-app {
+        width: 100%;
+        background-color: green;
+        grid-column: span 1;
+      }
+
+    </style>
+    
+
+      <div class="left-movie-app">
+        <input type="text" id="textSearch" placeholder="Nombre de película..." />
+        <br />
+        
+      </div>
+      <div class="right-movie-app">
+        BOTON Y FICHA
+      </div>
+
+
+
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class MovieSearchApp extends Polymer.Element {
+      static get is() { return 'movie-search-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'movie-search-app'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(MovieSearchApp.is, MovieSearchApp);
+  </script>
+</dom-module>

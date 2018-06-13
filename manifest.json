@@ -1,0 +1,7 @@
+{
+  "name": "movie-search",
+  "short_name": "movie-search",
+  "description": "The movie search application for the Polymer 2.0 tutorial",
+  "start_url": "/",
+  "display": "standalone"
+}
