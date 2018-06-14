@@ -13,7 +13,7 @@
         margin-top: 20px;
         margin-bottom: 20px;
         display: grid;
-        grid-template-columns: 75% auto;        
+        grid-template-columns: 75% auto;
       }
 
       .left-movie-app {
@@ -28,35 +28,75 @@
         grid-column: span 1;
       }
 
-      .movies-list { 
+      .movies-list {
         min-height: 100px;
-        border: solid 1px black;      
-      }
-
-      .movies-list > div {
         border: solid 1px black;
       }
 
+      .movies-list>div {
+        border: solid 1px black;
+      }
+
+      .iron-list-movie-item:hover {
+        background-color: #AA0033;
+      }
     </style>
-    
 
-      <div class="left-movie-app">
-        Search (by name): <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch" />
-        
-        <div
 
-        <iron-list class="movies-list" items="[[movies]]">
-          <template>
-            <div>
-              Nombre de película: [[ item.Title ]]
-            </div>
-          </template>
-        </iron-list>        
+    <div class="left-movie-app">
+      Búsqueda:  <br />
+      Título: <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch"
+        on-keypress="handleTextKeypress" />
+      <br />
+      Año: <input type="text" id="yearSearch" placeholder="Año de emisión..." />
+      <br />
+      Tipo: 
+      <select id="typeSearch">
+        <option value="null" selected>TODOS LOS TIPOS</option>
+        <option value="movie">Películas</option>
+        <option value="series">Series</option>
+        <option value="episode">Episodios</option>
+      </select>
+
+      <iron-list class="movies-list" items="[[movies]]">
+        <template>
+          <div class="iron-list-movie-item" data-item$="[[ item ]]" on-click="handleMovieClick">
+            [[ item.Title ]]
+          </div>
+        </template>
+      </iron-list>
+    </div>
+
+    <div class="right-movie-app">
+      <input type="button" value="Buscar" disabled="{{ btnSearchDisabled }}" on-click="doOMDBSearch" />
+      <div class="movie-detail" hidden$="[[bActiveMovieIsHidden]]">
+        <span>Título: [[ activeMovie.Title ]] </span>
+        <br />
+        <span>Año: [[ activeMovie.Year ]] </span>
+        <br />
+        <span>Tipo: [[ activeMovie.Type ]] </span>
+        <br />
+        <span>Poster: </span>
+        <br />
+        <img src="[[ activeMovie.Poster ]]" />
       </div>
-      <div class="right-movie-app">
-        <input type="button" value="Buscar" disabled="{{ btnSearchDisabled }}" on-click="doOMDBSearch" />
-      </div>
-      <iron-ajax id="myxhr" on-response="handleMovieSearch"></iron-ajax>
+    </div>
+    <iron-ajax id="myxhr" on-response="handleMovieSearch"></iron-ajax>
+
+    <!-- Esto es la parte de paginar los resultados... -->
+    <div hidden$="[[ bPaginationHidden ]]">      
+      PAGINACION
+      <template is="dom-repeat" items="{{aPaginationLinks}}" filter="_getPaginationLinks" observer="[[movies]]">        
+        <span>
+          <!-- @todo: Cambiar por un callback que rehaga la lista de movies -->
+          <!-- <a href="[[ item ]]">[[ index ]]</a> -->
+          Aqui paginariamos a página [[ index ]]
+          <br />
+        </span>
+      </template>
+    </div>
+
+
   </template>
 
   <script>
@@ -69,38 +109,108 @@
             value: 'movie-search-app'
           },
           movies: {
-            type: Array            
+            type: Array
           },
           btnSearchDisabled: {
             type: Boolean,
             value: true
+          },
+          bActiveMovieIsHidden: {
+            type: Boolean,
+            value: true
+          },
+          iTotalResults: {
+            type: Number,
+            value: 0            
+          },
+          iTotalPages: {
+            type: Number,
+            value: 0
+          },
+          bPaginationHidden: {
+            type: Boolean,
+            value: false
+          },
+          aPaginationLinks: {
+            type: Array,
+            value: []
+          },
+          sLastURL: {
+            type: String            
+          },
+          activeMovie: {
+            type: Object
           }
         };
       }
+      
       handleChangeTextSearch(oInputEvent) {
         let sTotalText = oInputEvent.srcElement.value;
-        if(sTotalText.length > 2) {
+        if (sTotalText.length > 2) {
           this.btnSearchDisabled = false;
         } else {
           this.btnSearchDisabled = true;
         }
       }
 
+      handleTextKeypress(oKeyEvent) {
+        let sTextActual = oKeyEvent.srcElement.value;
+        if (sTextActual.length > 2) {
+          this.btnSearchDisabled = false;
+          if (oKeyEvent.keyCode === 13) {
+            this.doOMDBSearch();
+          }
+        }
+        console.log('Tecla pulsada (ASCII): ' + oKeyEvent.keyCode);        
+      }
+
+      _getPaginationLinks() {
+        this.aPaginationLinks.length = 0;
+        for(let i = 0; i < this.iTotalPages; i++) {
+          // this.aPaginationLinks.push(this.sLastURL + "&p=" + (i + 1));
+          this.push('aPaginationLinks', (this.sLastURL + "&p=" + (i + 1)));
+        }
+        console.log('_getPaginationLinks');
+        // console.log()
+      }
+
+      _handlePaginationLinksObserve() {
+        console.log(arguments);
+      }
+
       handleMovieSearch(oEvent, oRequest) {
         let aResult = oRequest.parseResponse();
+        this.iTotalResults = aResult.totalResults;
+        this.iTotalPages = Math.ceil(this.iTotalResults / 10);   // @todo: Ese 10 a un DEFINE
+        // this._getPaginationLinks();
+        console.log(this.aPaginationLinks);
         this.movies = aResult.Search;
+        this.bPaginationHidden = false;
+      }
+
+      handleMovieClick(oEvent) {
+        let oMovieSelected = JSON.parse(arguments[0].srcElement.getAttribute('data-item'));
+        this.activeMovie = oMovieSelected;
+        this.bActiveMovieIsHidden = false;
       }
 
       doOMDBSearch() {
         let sText = this.$.textSearch.value;
-        console.log(sText);
-        let sURL = "http://www.omdbapi.com/?apikey=e477ed6a&s=" + sText;
-        console.log(sURL);
-        this.$.myxhr.url = sURL;
+        let sYear = (this.$.yearSearch.value !== '') ? this.$.yearSearch.value : null;
+        let sType = this.$.typeSearch.value;
+        
+        this.sLastURL = "http://www.omdbapi.com/?apikey=e477ed6a&s=" + sText;
+        if(sYear !== null) {
+          this.sLastURL += "&y=" + sYear;
+        }
+        if(sType !== "null") {
+          this.sLastURL += "&type=" + sType;
+        }
+        
+        this.$.myxhr.url = this.sLastURL;
         this.$.myxhr.generateRequest();
+        this.bActiveMovieIsHidden = true;
       }
-
-
     }
 
     window.customElements.define(MovieSearchApp.is, MovieSearchApp);
