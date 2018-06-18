@@ -3,11 +3,14 @@
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 
+<!-- @todo: i18n -->
+
 <dom-module id="movie-search-app">
   <template>
     <style>
+      /* @todo: Refactor, cambiar por valores fr / em */
+
       :host {
-        /* min-height: 500px; */
         margin-left: 20px;
         margin-right: 20px;
         margin-top: 20px;
@@ -16,10 +19,10 @@
         grid-template-columns: 75% auto;
       }
 
-      .left-movie-app {
+      .search-form-list-movies {
         width: 100%;
         background-color: #CCCCCC;
-        grid-column: span 1;
+        grid-column: span 1fr;
       }
 
       .right-movie-app {
@@ -40,23 +43,43 @@
       .iron-list-movie-item:hover {
         background-color: #AA0033;
       }
+
+      .search-form-element {
+        width: 100%;
+        align-items: center;
+      }
+
+      .pagination-list-container {
+        width: 100%;
+        align-items: center;
+        grid-column: span 2;
+      }
+
     </style>
 
 
-    <div class="left-movie-app">
-      Búsqueda:  <br />
-      Título: <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch"
-        on-keypress="handleTextKeypress" />
-      <br />
-      Año: <input type="text" id="yearSearch" placeholder="Año de emisión..." />
-      <br />
-      Tipo: 
-      <select id="typeSearch">
-        <option value="null" selected>TODOS LOS TIPOS</option>
-        <option value="movie">Películas</option>
-        <option value="series">Series</option>
-        <option value="episode">Episodios</option>
-      </select>
+    <div class="search-form-list-movies">
+      <fieldset>
+        <legend>Parámetros de búsqueda</legend>
+        <span class="search-form-element">
+          <b>Título: </b>
+          <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch" on-keypress="handleTextKeypress"
+          />
+        </span>
+        <span class="search-form-element">
+          <b>Año emisión: </b>
+          <input type="text" id="yearSearch" placeholder="Año de emisión..." />
+        </span>
+        <span class="search-form-element">
+          <b>Tipo contenido: </b>
+          <select id="typeSearch">
+            <option value="null" selected>TODOS LOS TIPOS</option>
+            <option value="movie">Películas</option>
+            <option value="series">Series</option>
+            <option value="episode">Episodios</option>
+          </select>
+        </span>
+      </fieldset>
 
       <iron-list class="movies-list" items="[[movies]]">
         <template>
@@ -67,31 +90,31 @@
       </iron-list>
     </div>
 
-    <div class="right-movie-app">
-      <input type="button" value="Buscar" disabled="{{ btnSearchDisabled }}" on-click="doOMDBSearch" />
+    <div class="movie-detail-container">
+      <input type="button" value="Buscar" disabled="{{ btnSearchDisabled }}" on-click="doOMDBSearch" class="big-search-button"
+      />
       <div class="movie-detail" hidden$="[[bActiveMovieIsHidden]]">
-        <span>Título: [[ activeMovie.Title ]] </span>
-        <br />
-        <span>Año: [[ activeMovie.Year ]] </span>
-        <br />
-        <span>Tipo: [[ activeMovie.Type ]] </span>
-        <br />
-        <span>Poster: </span>
-        <br />
-        <img src="[[ activeMovie.Poster ]]" />
+
+
+        <fieldset>
+          <span>Título: [[ activeMovie.Title ]]</span><br />
+          <span>Año: [[ activeMovie.Year ]]</span><br />          
+          <span>Tipo: [[ activeMovie.Type ]]</span><br />
+          <span>
+            Poster:
+            <img src="[[ activeMovie.Poster ]]" />
+          </span>
+        </fieldset>
       </div>
+
     </div>
+
     <iron-ajax id="myxhr" on-response="handleMovieSearch"></iron-ajax>
 
-    <!-- Esto es la parte de paginar los resultados... -->
-    <div hidden$="[[ bPaginationHidden ]]">      
-      PAGINACION
-      <template is="dom-repeat" items="{{aPaginationLinks}}" filter="_getPaginationLinks" observer="[[movies]]">        
-        <span>
-          <!-- @todo: Cambiar por un callback que rehaga la lista de movies -->
-          <!-- <a href="[[ item ]]">[[ index ]]</a> -->
-          Aqui paginariamos a página [[ index ]]
-          <br />
+    <div class="pagination-links-container" hidden$="[[ bPaginationHidden ]]">
+      <template is="dom-repeat" items="{{aPaginationLinks}}">
+        <span class="pagination-link">
+          <input type="button" on-click="handlePaginationClick" value="[[ getPageNumber(index) ]]" data-item$="[[ index ]]" />
         </span>
       </template>
     </div>
@@ -121,7 +144,7 @@
           },
           iTotalResults: {
             type: Number,
-            value: 0            
+            value: 0
           },
           iTotalPages: {
             type: Number,
@@ -136,21 +159,17 @@
             value: []
           },
           sLastURL: {
-            type: String            
+            type: String
           },
           activeMovie: {
             type: Object
           }
         };
       }
-      
+
       handleChangeTextSearch(oInputEvent) {
         let sTotalText = oInputEvent.srcElement.value;
-        if (sTotalText.length > 2) {
-          this.btnSearchDisabled = false;
-        } else {
-          this.btnSearchDisabled = true;
-        }
+        this.btnSearchDisabled = (sTotalText.length > 2) ? false : true;
       }
 
       handleTextKeypress(oKeyEvent) {
@@ -161,29 +180,38 @@
             this.doOMDBSearch();
           }
         }
-        console.log('Tecla pulsada (ASCII): ' + oKeyEvent.keyCode);        
+        console.log('Tecla pulsada (ASCII): ' + oKeyEvent.keyCode);
       }
 
       _getPaginationLinks() {
         this.aPaginationLinks.length = 0;
-        for(let i = 0; i < this.iTotalPages; i++) {
-          // this.aPaginationLinks.push(this.sLastURL + "&p=" + (i + 1));
+        for (let i = 0; i < this.iTotalPages; i++) {
           this.push('aPaginationLinks', (this.sLastURL + "&p=" + (i + 1)));
         }
         console.log('_getPaginationLinks');
-        // console.log()
+        console.log(this.aPaginationLinks);
+      }
+
+      getPageNumber(index) {
+        return 'Página ' + (index + 1);
       }
 
       _handlePaginationLinksObserve() {
         console.log(arguments);
       }
 
+      handlePaginationClick(oEvent) {
+        let page = oEvent.srcElement.getAttribute('data-item');
+        ++page;
+        this.doOMDBSearch(page);
+      }
+
       handleMovieSearch(oEvent, oRequest) {
         let aResult = oRequest.parseResponse();
         this.iTotalResults = aResult.totalResults;
         this.iTotalPages = Math.ceil(this.iTotalResults / 10);   // @todo: Ese 10 a un DEFINE
-        // this._getPaginationLinks();
-        console.log(this.aPaginationLinks);
+
+        this._getPaginationLinks();
         this.movies = aResult.Search;
         this.bPaginationHidden = false;
       }
@@ -194,22 +222,26 @@
         this.bActiveMovieIsHidden = false;
       }
 
-      doOMDBSearch() {
+      doOMDBSearch(page = 0) {
         let sText = this.$.textSearch.value;
         let sYear = (this.$.yearSearch.value !== '') ? this.$.yearSearch.value : null;
         let sType = this.$.typeSearch.value;
-        
+
         this.sLastURL = "http://www.omdbapi.com/?apikey=e477ed6a&s=" + sText;
-        if(sYear !== null) {
+        if (page > 0) {
+          this.sLastURL += "&page=" + page;
+        }
+        if (sYear !== null) {
           this.sLastURL += "&y=" + sYear;
         }
-        if(sType !== "null") {
+        if (sType !== "null") {
           this.sLastURL += "&type=" + sType;
         }
-        
+
         this.$.myxhr.url = this.sLastURL;
         this.$.myxhr.generateRequest();
         this.bActiveMovieIsHidden = true;
+        this._getPaginationLinks();
       }
     }
 
