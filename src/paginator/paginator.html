@@ -6,36 +6,33 @@
         <style>
         </style>
         <div>
-                <template is="dom-repeat" items="{{ links }}">
-                        <span class="pagination-link">
-                          <input type="button" on-click="handlePaginationClick" value="[[ getPageNumber(index) ]]" data-item$="[[ index ]]" />
-                        </span>
-                      </template>
-                
+            <template is="dom-repeat" items="{{ links }}">
+                <span class="pagination-link">
+                    <input type="button" on-click="handlePaginationClick" value="[[ getPageNumber(index) ]]" data-item$="[[ index ]]" />
+                </span>
+            </template>
+
         </div>
     </template>
 
     <script>
-        
+
         class SWCPaginator extends Polymer.Element {
             static get is() { return 'swc-paginator' }
             static get properties() {
                 return {
-                    links: {
-                        type: Array
-                    },
                     totalResults: {
                         type: Number
                     },
-                    totalPages: {
-                        type: Number
-                    },
-                    fnCallback: {
-                        type: Function
+                    resultsPerPage: {
+                        type: Number,
+                        value: 10
                     }
                 }
             }
+
             
+
             _handlePaginationClick(oEvent) {
                 let indexPage = oEvent.srcElement.getAttribute('data-item');
                 console.log(this.links[indexPage]);

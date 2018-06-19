@@ -3,6 +3,9 @@
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 
+<!-- Paginador desacoplado -->
+<link rel="import" href="../paginator/paginator.html">
+
 <!-- @todo: i18n -->
 
 <dom-module id="movie-search-app">
@@ -54,7 +57,6 @@
         align-items: center;
         grid-column: span 2;
       }
-
     </style>
 
 
@@ -97,9 +99,12 @@
 
 
         <fieldset>
-          <span>Título: [[ activeMovie.Title ]]</span><br />
-          <span>Año: [[ activeMovie.Year ]]</span><br />          
-          <span>Tipo: [[ activeMovie.Type ]]</span><br />
+          <span>Título: [[ activeMovie.Title ]]</span>
+          <br />
+          <span>Año: [[ activeMovie.Year ]]</span>
+          <br />
+          <span>Tipo: [[ activeMovie.Type ]]</span>
+          <br />
           <span>
             Poster:
             <img src="[[ activeMovie.Poster ]]" />
@@ -117,8 +122,7 @@
           <input type="button" on-click="handlePaginationClick" value="[[ getPageNumber(index) ]]" data-item$="[[ index ]]" />
         </span>
       </template>
-    </div>
-
+    </div>    
 
   </template>
 
@@ -127,10 +131,6 @@
       static get is() { return 'movie-search-app'; }
       static get properties() {
         return {
-          prop1: {
-            type: String,
-            value: 'movie-search-app'
-          },
           movies: {
             type: Array
           },
@@ -141,22 +141,23 @@
           bActiveMovieIsHidden: {
             type: Boolean,
             value: true
-          },
-          iTotalResults: {
-            type: Number,
-            value: 0
-          },
-          iTotalPages: {
-            type: Number,
-            value: 0
-          },
-          bPaginationHidden: {
-            type: Boolean,
-            value: false
-          },
-          aPaginationLinks: {
-            type: Array,
-            value: []
+          },          
+            iTotalResults: {
+              type: Number,
+              value: 0
+            },
+            iTotalPages: {
+              type: Number,
+              value: 0
+            },
+            bPaginationHidden: {
+              type: Boolean,
+              value: false
+            },
+            aPaginationLinks: {
+              type: Array,
+              value: []
+            
           },
           sLastURL: {
             type: String
@@ -165,6 +166,16 @@
             type: Object
           }
         };
+      }
+
+      /*
+      * IMPORTANTE: Método de lifecycle
+      */
+      ready() {        
+        super.ready();
+        this.addEventListener('swc-paginator-new-page', function(event) {
+          this.doOMDBSearch(event.detail.newPage);
+        });
       }
 
       handleChangeTextSearch(oInputEvent) {
@@ -180,7 +191,6 @@
             this.doOMDBSearch();
           }
         }
-        console.log('Tecla pulsada (ASCII): ' + oKeyEvent.keyCode);
       }
 
       _getPaginationLinks() {
@@ -188,22 +198,17 @@
         for (let i = 0; i < this.iTotalPages; i++) {
           this.push('aPaginationLinks', (this.sLastURL + "&p=" + (i + 1)));
         }
-        console.log('_getPaginationLinks');
-        console.log(this.aPaginationLinks);
       }
 
       getPageNumber(index) {
         return 'Página ' + (index + 1);
       }
 
-      _handlePaginationLinksObserve() {
-        console.log(arguments);
-      }
 
       handlePaginationClick(oEvent) {
         let page = oEvent.srcElement.getAttribute('data-item');
         ++page;
-        this.doOMDBSearch(page);
+        this.doOMDBSearch(page);        
       }
 
       handleMovieSearch(oEvent, oRequest) {

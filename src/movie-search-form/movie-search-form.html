@@ -1,0 +1,53 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="swc-onboarding-movie-search-form">
+    <template>
+        <style>
+        </style>
+        <div class="search-form-list-movies">
+            <fieldset>
+                <legend>Parámetros de búsqueda</legend>
+                <span class="search-form-element">
+                    <b>Título: </b>
+                    <!-- <input type="text" id="textSearch" placeholder="Nombre de película..." on-input="handleChangeTextSearch" on-keypress="handleTextKeypress"
+                    /> -->
+                    <input  value="{{ title::input }}" placeholder="Nombre de película..." />
+                </span>
+                <span class="search-form-element">
+                    <b>Año emisión: </b>
+                    <!-- <input type="text" id="yearSearch" placeholder="Año de emisión..." /> -->
+                    <input value="{{ year::input }}" placeholder="Año emisión..." />
+                </span>
+                <!-- @todo: Implementarlo -->
+                <!-- <span class="search-form-element">
+                    <b>Tipo contenido: </b>
+                    <select id="typeSearch">
+                        <option value="null" selected>TODOS LOS TIPOS</option>
+                        <option value="movie">Películas</option>
+                        <option value="series">Series</option>
+                        <option value="episode">Episodios</option>
+                    </select>
+                </span> -->
+            </fieldset>
+        </div>
+        <script>
+            class SwcOnboardingMovieSearchForm extends Polymer.Element {
+                static get is() { return 'swc-onboarding-movie-search-form' }
+                static get properties() {
+                    return {
+                        title: {
+                            type: String
+                        },
+                        year: {
+                            type: Number
+                        }
+                    }
+                }
+
+                doNewSearch() {
+                    // this.
+                }
+            }
+        </script>
+    </template>
+</dom-module>
